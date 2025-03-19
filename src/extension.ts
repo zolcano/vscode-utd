@@ -150,7 +150,9 @@ function activate(context: vscode.ExtensionContext) {
 							fs.readFile(excludeFilePath, "utf-8", (err, data) => {
 								if (err) {
 								}
-								excludedKeys = data.split("\n");
+								excludedKeys = data
+									.split("\n")
+									.map((str) => str.replace(/[\r\n]+/g, ""));
 								for (let excludedKey of excludedKeys) {
 									for (let i = 0; i < jsonKeysList.length; i++) {
 										if (jsonKeysList[i][0] === excludedKey) {
@@ -161,7 +163,6 @@ function activate(context: vscode.ExtensionContext) {
 								}
 							});
 						}
-
 						let outputFile = path.join(
 							outputFolder,
 							`udt-output-${projectName}.txt`
