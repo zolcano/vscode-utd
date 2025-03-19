@@ -1,0 +1,91 @@
+{
+	"name": "utd",
+	"displayName": "unused translatekey detector",
+	"description": "",
+	"version": "1.0.0",
+	"icon": "resources/utd.png",
+	"engines": {
+		"vscode": "^1.98.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [],
+	"main": "./out/extension.js",
+	"contributes": {
+		"menus": {
+			"view/title": [
+				{
+					"command": "utd.refreshEntry",
+					"group": "navigation"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "utd-container",
+					"title": "unused translatekey detector",
+					"icon": "resources/utd.png"
+				}
+			]
+		},
+		"views": {
+			"utd-container": [
+				{
+					"id": "utd-settings",
+					"name": "U.T.D. settings"
+				},
+				{
+					"id": "utd-project",
+					"name": "Project list"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "utd.analyze",
+				"title": "start analyze"
+			},
+			{
+				"command": "utd.refreshEntry",
+				"title": "refresh setting views"
+			},
+			{
+				"command": "utd.showConfigFile",
+				"title": "show config file"
+			},
+			{
+				"command": "utd.createConfigFile",
+				"title": "create config file"
+			},
+			{
+				"command": "utd.showExcludeFile",
+				"title": "show exclude file"
+			},
+			{
+				"command": "utd.createExcludeFile",
+				"title": "create exclude file"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src",
+		"test": "vscode-test"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.98.0",
+		"@types/mocha": "^10.0.10",
+		"@types/node": "20.x",
+		"@typescript-eslint/eslint-plugin": "^8.25.0",
+		"@typescript-eslint/parser": "^8.25.0",
+		"eslint": "^9.21.0",
+		"typescript": "^5.7.3",
+		"@vscode/test-cli": "^0.0.10",
+		"@vscode/test-electron": "^2.4.1"
+	}
+}
