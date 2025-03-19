@@ -179,7 +179,7 @@ function activate(context: vscode.ExtensionContext) {
 
 						fs.writeFile(
 							outputFile,
-							`***** INFO *****\n\nProject : ${projectName}\nUnused Json key : ${counter} of ${jsonKeysList.length}\nIgnored keys : ${excludedKeys.length}\nHTML files analyzed : ${htmlFilesList.length}\nTypeScript files analyzed : ${tsFilesList.length}\n\n***** UNUSED KEYS *****\n\n`,
+							`***** INFO *****\n\nProject : ${projectName}\nUnused Json key : ${counter} of ${jsonKeysList.length}\nIgnored keys : ${excludedKeys.length}\nHTML files analyzed : ${htmlFilesList.length}\nTypeScript files analyzed : ${tsFilesList.length}\n\n***** EXCLUDED KEYS *****\n\n`,
 							(err) => {}
 						);
 
