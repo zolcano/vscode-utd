@@ -1,40 +1,33 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import {
-	getConfigFilePath,
-	getExcludeFilePath,
-	getRootPath,
-} from "./extension-static";
+import { getConfigFilePath, getExcludeFilePath } from "./extension-static";
 
+// Class definition for UtdTreeSettingsDataProvider which implements vscode.TreeDataProvider interface
 export class UtdTreeSettingsDataProvider
 	implements vscode.TreeDataProvider<SettingItem>
 {
+	// Array to hold SettingItem objects
 	private items: SettingItem[] = [];
 	constructor() {
-		const ROOT_PATH: string | undefined = getRootPath();
-		if (ROOT_PATH) {
-			const EXCLUDE_PATH: string = getExcludeFilePath(ROOT_PATH);
-			const CONFIG_PATH: string = getConfigFilePath(ROOT_PATH);
-			let settingItem: SettingItem;
-			if (fs.existsSync(CONFIG_PATH)) {
-				settingItem = new SettingItem("show config");
-			} else {
-				settingItem = new SettingItem("create config");
-			}
-			this.items.push(settingItem);
+		// Get the file paths for exclude and config files
+		const excludeFilePath: string | undefined = getExcludeFilePath();
+		const configFilePath: string | undefined = getConfigFilePath();
 
-			if (fs.existsSync(EXCLUDE_PATH)) {
-				settingItem = new SettingItem("show exclude");
-			} else {
-				settingItem = new SettingItem("create exclude");
-			}
-			this.items.push(settingItem);
+		let settingItem: SettingItem;
+		if (configFilePath && fs.existsSync(configFilePath)) {
+			settingItem = new SettingItem("show config");
+		} else {
+			settingItem = new SettingItem("create config");
 		}
-	}
+		this.items.push(settingItem);
 
-	onDidChangeTreeData?:
-		| vscode.Event<void | SettingItem | SettingItem[] | null | undefined>
-		| undefined;
+		if (excludeFilePath && fs.existsSync(excludeFilePath)) {
+			settingItem = new SettingItem("show exclude");
+		} else {
+			settingItem = new SettingItem("create exclude");
+		}
+		this.items.push(settingItem);
+	}
 
 	getTreeItem(
 		element: SettingItem
@@ -48,18 +41,20 @@ export class UtdTreeSettingsDataProvider
 	}
 }
 
+// Class definition for SettingItem which extends vscode.TreeItem
 class SettingItem extends vscode.TreeItem {
 	constructor(label: string) {
 		super(label);
 
+		// Set the command and icon based on the label
 		if (label === "show config") {
 			this.command = {
 				command: "utd.showConfigFile",
 				title: "show config",
 			};
 			this.iconPath = new vscode.ThemeIcon(
-				"play",
-				new vscode.ThemeColor("charts.green")
+				"output",
+				new vscode.ThemeColor("charts.blue")
 			);
 		} else if (label === "create config") {
 			this.command = {
@@ -85,8 +80,8 @@ class SettingItem extends vscode.TreeItem {
 				title: "show exclude file",
 			};
 			this.iconPath = new vscode.ThemeIcon(
-				"play",
-				new vscode.ThemeColor("charts.green")
+				"output",
+				new vscode.ThemeColor("charts.blue")
 			);
 		}
 	}

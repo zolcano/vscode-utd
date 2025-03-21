@@ -39,6 +39,10 @@
 				{
 					"id": "utd-project",
 					"name": "Project list"
+				},
+				{
+					"id": "utd-output",
+					"name": "Output list"
 				}
 			]
 		},
@@ -62,6 +66,10 @@
 			{
 				"command": "utd.showExcludeFile",
 				"title": "show exclude file"
+			},
+			{
+				"command": "utd.showOutputFile",
+				"title": "show output file"
 			},
 			{
 				"command": "utd.createExcludeFile",

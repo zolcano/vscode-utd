@@ -4,3 +4,7 @@ node_modules/**
 out/**
 vscode-utd/**
 package-lock.json
+*.vsix
+utd-output-**
+utd.config.json
+utd.exclude.txt
