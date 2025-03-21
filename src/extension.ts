@@ -262,10 +262,10 @@ function activate(context: vscode.ExtensionContext) {
 				if (outputFolder && rootPath) {
 					outputFilePath = path.join(
 						outputFolder,
-						`udt-output-${projectName}.txt`
+						`utd-output-${projectName}.txt`
 					);
 				} else if (rootPath) {
-					outputFilePath = path.join(rootPath, `udt-output-${projectName}.txt`);
+					outputFilePath = path.join(rootPath, `utd-output-${projectName}.txt`);
 				}
 
 				// Write the output information to the output file
@@ -277,6 +277,7 @@ function activate(context: vscode.ExtensionContext) {
 					vscode.window.showTextDocument(document);
 				});
 			}
+			vscode.commands.executeCommand("utd.refreshEntry");
 		}
 	);
 

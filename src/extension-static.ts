@@ -54,7 +54,7 @@ function getOutputFile(outputInfo: OutputInfo): string {
 	return `***** INFO *****
 	
 Project : ${outputInfo.projectName}
-Unused Json key : ${outputInfo.unusedJsonKey} of ${outputInfo.jsonKeysListLength}
+Unused json keys : ${outputInfo.unusedJsonKey} of ${outputInfo.jsonKeysListLength}
 Ignored keys : ${outputInfo.excludedKeyListLength}
 HTML files analyzed : ${outputInfo.htmlFilesListLength}
 TypeScript files analyzed : ${outputInfo.tsFilesListLength}
