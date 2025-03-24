@@ -17,7 +17,7 @@ import {
 	OutputInfo,
 } from "./extension-static";
 
-import { researchDir, htmlResearch, tsResearch, findJsonKeys } from "./analyze";
+import { researchDir, fileResearch, findJsonKeys } from "./analyze";
 import { UtdTreeProjectDataProvider } from "./project-tree-views";
 import { UtdTreeSettingsDataProvider } from "./settings-tree-views";
 import { UtdTreeOutputDataProvider } from "./output-tree-views";
@@ -57,6 +57,25 @@ function activate(context: vscode.ExtensionContext) {
 	});
 
 	/**
+	 * Register the command "utd.openFile" to show the given file in VsCode,
+	 * and assign the function to it.
+	 *
+	 * The function takes the given file path and opens it.
+	 */
+	let openFile = vscode.commands.registerCommand(
+		"utd.openFile",
+		(filePath: string) => {
+			if (fs.existsSync(filePath)) {
+				vscode.workspace.openTextDocument(filePath).then((document) => {
+					vscode.window.showTextDocument(document);
+				});
+			} else {
+				showErrorFileNotExist(filePath);
+			}
+		}
+	);
+
+	/**
 	 * Register the command "utd.createConfigFile" to initialize an example of configuration file
 	 * in the root of opened project and assign the function to it.
 	 *
@@ -74,7 +93,7 @@ function activate(context: vscode.ExtensionContext) {
 				} else {
 					showErrorFileExist("utd.config.json");
 				}
-				vscode.commands.executeCommand("utd.showConfigFile");
+				vscode.commands.executeCommand("utd.openFile", configFilePath);
 			} else {
 				showErrorNoOpenProject();
 			}
@@ -100,81 +119,7 @@ function activate(context: vscode.ExtensionContext) {
 				} else {
 					showErrorFileExist("utd.exclude.txt");
 				}
-				vscode.commands.executeCommand("utd.showExcludeFile");
-			} else {
-				showErrorNoOpenProject();
-			}
-		}
-	);
-
-	/**
-	 * Register the command "utd.showConfigFile" to show the configuration file
-	 * and assign the function to it.
-	 *
-	 * The function use the VsCode API to open the config file in the editor.
-	 */
-	let showConfigFile = vscode.commands.registerCommand(
-		"utd.showConfigFile",
-		() => {
-			if (getRootPath()) {
-				const configFilePath: string | undefined = getConfigFilePath();
-				if (configFilePath && fs.existsSync(configFilePath)) {
-					vscode.workspace.openTextDocument(configFilePath).then((document) => {
-						vscode.window.showTextDocument(document);
-					});
-				} else {
-					showErrorFileNotExist("utd.config.json");
-				}
-			} else {
-				showErrorNoOpenProject();
-			}
-		}
-	);
-
-	/**
-	 * Register the command "utd.showExcludeFile" to show the configuration file
-	 * and assign the function to it.
-	 *
-	 * The function use the VsCode API to open the exclude file in the editor.
-	 */
-
-	let showExcludeFile = vscode.commands.registerCommand(
-		"utd.showExcludeFile",
-		() => {
-			if (getRootPath()) {
-				const excludeFilePath: string | undefined = getExcludeFilePath();
-				if (excludeFilePath && fs.existsSync(excludeFilePath)) {
-					vscode.workspace
-						.openTextDocument(excludeFilePath)
-						.then((document) => {
-							vscode.window.showTextDocument(document);
-						});
-				} else {
-					showErrorFileNotExist("utd.exclude.txt");
-				}
-			} else {
-				showErrorNoOpenProject();
-			}
-		}
-	);
-
-	/**
-	 Register the command "utd.showOutputFile" to show the output file selected
-	 * and assign the function to it.
-	 *
-	 * The function use the VsCode API to open the exclude file in the editor.
-	 */
-	let showOutputFile = vscode.commands.registerCommand(
-		"utd.showOutputFile",
-		(filePath: string) => {
-			if (getRootPath()) {
-				if (filePath && fs.existsSync(filePath)) {
-					vscode.workspace.openTextDocument(filePath).then((document) => {
-						vscode.window.showTextDocument(document);
-					});
-				} else {
-					showErrorFileNotExist(filePath);
-				}
+				vscode.commands.executeCommand("utd.openFile", excludeFilePath);
 			} else {
 				showErrorNoOpenProject();
 			}
@@ -189,11 +134,21 @@ function activate(context: vscode.ExtensionContext) {
 		"utd.analyze",
 		async function (
 			projectName: string,
-			projectPath: string,
+			rootPaths: string[],
 			jsonPath: string,
+			extensions: string[],
 			excludeFilePath: string | undefined,
 			outputFolder: string | undefined
 		) {
+			const outputChannel = vscode.window.createOutputChannel("utd");
+			outputChannel.show(true);
+			outputChannel.appendLine(projectName);
+			outputChannel.appendLine(JSON.stringify(rootPaths));
+			outputChannel.appendLine(jsonPath);
+			outputChannel.appendLine(JSON.stringify(extensions));
+			outputChannel.appendLine(String(excludeFilePath));
+			outputChannel.appendLine(String(outputFolder));
+
 			if (!fs.existsSync(jsonPath)) {
 				showErrorFileNotExist(jsonPath);
 			} else {
@@ -201,15 +156,14 @@ function activate(context: vscode.ExtensionContext) {
 				const outputChannel = vscode.window.createOutputChannel("utd");
 				outputChannel.show(true);
 
-				const tsFilesList: string[] = [];
-				const htmlFilesList: string[] = [];
+				const filesList: string[] = [];
 				const jsonKeysList: [string, number][] = [];
 				let excludedKeyList: string[] = [];
 
-				await Promise.all([
-					researchDir(projectPath, tsFilesList, htmlFilesList),
-					findJsonKeys(jsonPath, jsonKeysList),
-				]);
+				for (let rootPath of rootPaths) {
+					await researchDir(rootPath, filesList, extensions);
+				}
+				await findJsonKeys(jsonPath, jsonKeysList);
 
 				if (excludeFilePath) {
 					const data = fs.readFileSync(excludeFilePath, "utf-8");
@@ -228,16 +182,15 @@ function activate(context: vscode.ExtensionContext) {
 					}
 				}
 
-				await htmlResearch(htmlFilesList, jsonKeysList, outputChannel);
-				await tsResearch(tsFilesList, jsonKeysList, outputChannel);
+				await fileResearch(filesList, jsonKeysList, outputChannel);
 
 				// Initialize output information object
 				let outputInfo: OutputInfo = {
 					projectName: projectName,
 					jsonKeysListLength: jsonKeysList.length,
 					excludedKeyListLength: excludedKeyList.length,
-					htmlFilesListLength: htmlFilesList.length,
-					tsFilesListLength: tsFilesList.length,
+					filesListLength: filesList.length,
+					filesExtensions: extensions,
 					excludedKeyListOutput: "",
 					jsonKeysOutput: "",
 					unusedJsonKey: 0,
@@ -273,9 +226,7 @@ function activate(context: vscode.ExtensionContext) {
 				showInfoFileCreated(outputFilePath);
 
 				// Open the output file in the editor
-				vscode.workspace.openTextDocument(outputFilePath).then((document) => {
-					vscode.window.showTextDocument(document);
-				});
+				vscode.commands.executeCommand("utd.openFile", outputFilePath);
 			}
 			vscode.commands.executeCommand("utd.refreshEntry");
 		}
@@ -285,9 +236,7 @@ function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		refreshEntry,
 		createConfigFile,
-		showConfigFile,
-		showExcludeFile,
-		showOutputFile,
+		openFile,
 		createExcludeFile,
 		analyze
 	);

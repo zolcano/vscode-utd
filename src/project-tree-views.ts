@@ -1,6 +1,15 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
+import * as path from "path";
 import { getConfigFilePath, showErrorFileNotExist } from "./extension-static";
+
+// Constants for repeated labels
+const LABEL_START_ANALYZE = "start analyze";
+const LABEL_FOLDER = "folder";
+const LABEL_PROJECT_DOCUMENTS = "project documents";
+const LABEL_EXTENSIONS = "extensions";
+const LABEL_MORE_INFO = "more info";
+const LABEL_FOLDERS_TO_SCAN = "folders to scan";
 
 // This class implements the TreeDataProvider interface for the ProjectItem type.
 // It provides data for the tree view in the VS Code extension.
@@ -11,46 +20,64 @@ export class UtdTreeProjectDataProvider
 	private items: ProjectItem[] = [];
 	constructor() {
 		const configFilePath: string | undefined = getConfigFilePath();
-		if (configFilePath && fs.existsSync(configFilePath)) {
-			const jsonData: any = JSON.parse(
-				fs.readFileSync(configFilePath, "utf-8")
+		if (!configFilePath || !fs.existsSync(configFilePath)) {
+			showErrorFileNotExist("utd.config.json");
+			return;
+		}
+
+		const jsonData: any = JSON.parse(fs.readFileSync(configFilePath, "utf-8"));
+		for (let item of jsonData.utdConfig) {
+			const rootProjectItem = new ProjectItem(item.labelName);
+			const moreInfoProjectItem: ProjectItem = new ProjectItem(LABEL_MORE_INFO);
+			const foldersToScan: ProjectItem = new ProjectItem(LABEL_FOLDERS_TO_SCAN);
+
+			rootProjectItem.children.push(
+				new ProjectItem(
+					LABEL_START_ANALYZE,
+					item.labelName,
+					item.rootPaths,
+					item.jsonPath,
+					item.fileToAnalyze,
+					item.excludePath ? item.excludepath : undefined,
+					jsonData.globalConfig[0].outputFolder
+						? jsonData.globalConfig[0].outputFolder
+						: undefined
+				)
 			);
-			this.items = jsonData.projectConfig.map((item: any) => {
-				// Create the root project item.
-				const rootProjectItem: ProjectItem = new ProjectItem(item.labelName);
 
-				// Create a "more info" item with additional subobject
-				const moreInfoProjectItem: ProjectItem = new ProjectItem("more info");
-				moreInfoProjectItem.children.push(
-					new ProjectItem("root path", item.rootPath)
+			for (let rootPath of item.rootPaths) {
+				foldersToScan.children.push(
+					new ProjectItem(LABEL_FOLDER, path.basename(rootPath), rootPath)
 				);
-				moreInfoProjectItem.children.push(
-					new ProjectItem("json path", item.jsonPath)
-				);
-				if (item.excludeFilePath) {
-					moreInfoProjectItem.children.push(
-						new ProjectItem("exclude file", item.excludeFilePath)
-					);
-				}
-				rootProjectItem.children.push(moreInfoProjectItem);
+			}
+			moreInfoProjectItem.children.push(foldersToScan);
 
-				// Create the execute button item to start analysis of a project.
-				rootProjectItem.children.push(
+			moreInfoProjectItem.children.push(
+				new ProjectItem(
+					LABEL_PROJECT_DOCUMENTS,
+					path.basename(item.jsonPath),
+					item.jsonPath
+				)
+			);
+
+			//optionnal
+			if (item.excludePath) {
+				moreInfoProjectItem.children.push(
 					new ProjectItem(
-						"execute",
-						item.labelName,
-						item.rootPath,
-						item.jsonPath,
-						item.excludeFilePath === "" ? undefined : item.excludeFilePath,
-						jsonData.utdConfig[0].outputFolder === ""
-							? undefined
-							: jsonData.utdConfig[0].outputFolder
+						LABEL_PROJECT_DOCUMENTS,
+						path.basename(item.excludePath),
+						item.excludePath
 					)
 				);
-				return rootProjectItem;
-			});
-		} else {
-			showErrorFileNotExist("utd.config.json");
+			}
+
+			moreInfoProjectItem.children.push(
+				new ProjectItem(LABEL_EXTENSIONS, JSON.stringify(item.fileToAnalyze))
+			);
+
+			rootProjectItem.children.push(moreInfoProjectItem);
+
+			this.items.push(rootProjectItem);
 		}
 	}
 	getTreeItem(
@@ -74,7 +101,7 @@ class ProjectItem extends vscode.TreeItem {
 		super(label);
 
 		// Set properties based on the label.
-		if (label === "execute") {
+		if (label === LABEL_START_ANALYZE) {
 			this.command = {
 				command: "utd.analyze",
 				title: "Start analyse of this project",
@@ -84,15 +111,34 @@ class ProjectItem extends vscode.TreeItem {
 				"play",
 				new vscode.ThemeColor("charts.green")
 			);
-		} else if (label === "root path") {
+		} else if (label === LABEL_FOLDER) {
 			this.label = args[0];
-		} else if (label === "json path") {
+			this.description = args[1];
+			this.iconPath = new vscode.ThemeIcon(
+				"folder",
+				new vscode.ThemeColor("charts.yellow")
+			);
+		} else if (label === LABEL_PROJECT_DOCUMENTS) {
+			this.command = {
+				command: "utd.openFile",
+				title: "open the file",
+				arguments: [args[1]],
+			};
 			this.label = args[0];
-		} else if (label === "exclude file") {
-			this.label = args[0];
+			this.description = args[1];
+			this.iconPath = new vscode.ThemeIcon(
+				"json",
+				new vscode.ThemeColor("charts.blue")
+			);
+		} else if (label === LABEL_EXTENSIONS) {
+			this.description = args[0];
+			this.iconPath = new vscode.ThemeIcon(
+				"symbol-type-parameter",
+				new vscode.ThemeColor("charts.yellow")
+			);
 		} else {
 			//collapsed items that contain children have no specific properties
-			this.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+			this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
 		}
 	}
 }

@@ -57,7 +57,7 @@ class outputItem extends vscode.TreeItem {
 		super(label);
 		//associate a command to the label in the tree
 		this.command = {
-			command: "utd.showOutputFile",
+			command: "utd.openFile",
 			title: "show this file",
 			arguments: [path.join(outputFolder, label)],
 		};

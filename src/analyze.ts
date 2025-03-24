@@ -10,73 +10,47 @@ import * as path from "path";
  */
 export async function researchDir(
 	projectPath: string,
-	tsFilesList: string[],
-	htmlFilesList: string[]
+	filesList: string[],
+	extensions: string[]
 ) {
 	const content = await fs.promises.readdir(projectPath);
 	for (const file of content) {
 		const contentPath = path.join(projectPath, file);
 		const stats = await fs.promises.stat(contentPath);
 		if (stats.isDirectory()) {
-			await researchDir(contentPath, tsFilesList, htmlFilesList);
+			await researchDir(contentPath, filesList, extensions);
 		} else {
-			const extension = path.extname(file);
-			if (extension === ".ts") {
-				tsFilesList.push(contentPath);
-			} else if (extension === ".html") {
-				htmlFilesList.push(contentPath);
+			const extfile = path.extname(file);
+			for (let extension of extensions) {
+				if (extension === extfile) {
+					filesList.push(contentPath);
+				}
 			}
 		}
 	}
 }
 
 /**
- * Analyzes HTML files to count occurrences of specified JSON keys.
- * @param htmlFilesList - Array of paths to HTML files to be analyzed.
+ * Analyzes files to count occurrences of specified JSON keys.
+ * @param filesList - Array of paths to files to be analyzed.
  * @param jsonKeysList - Array of JSON keys to search for, along with their count.
  * @param outputChannel - VS Code output channel to log information.
  */
-export async function htmlResearch(
-	htmlFilesList: string[],
+export async function fileResearch(
+	filesList: string[],
 	jsonKeysList: [string, number][],
 	outputChannel: vscode.OutputChannel
 ) {
 	let log = 1;
-	for (const htmlFile of htmlFilesList) {
-		const htmlFileLine = await fs.promises.readFile(htmlFile, "utf-8");
+	for (const file of filesList) {
+		const fileLine = await fs.promises.readFile(file, "utf-8");
 		for (const jsonKey of jsonKeysList) {
-			if (htmlFileLine.includes(jsonKey[0])) {
+			if (fileLine.includes(jsonKey[0])) {
 				jsonKey[1] += 1;
 			}
 		}
 		outputChannel.append(
-			`# [INFO] ${log.toString()} HTML file.s analyzed by ${htmlFilesList.length.toString()}\n`
-		);
-		log += 1;
-	}
-}
-
-/**
- * Analyzes TypeScript files to count occurrences of specified JSON keys.
- * @param tsFilesList - Array of paths to TypeScript files to be analyzed.
- * @param jsonKeysList - Array of JSON keys to search for, along with their count.
- * @param outputChannel - VS Code output channel to log information.
- */
-export async function tsResearch(
-	tsFilesList: string[],
-	jsonKeysList: [string, number][],
-	outputChannel: vscode.OutputChannel
-) {
-	let log = 1;
-	for (const tsFile of tsFilesList) {
-		const tsFileLine = await fs.promises.readFile(tsFile, "utf-8");
-		for (const jsonKey of jsonKeysList) {
-			if (tsFileLine.includes(jsonKey[0])) {
-				jsonKey[1] += 1;
-			}
-		}
-		outputChannel.append(
-			`# [INFO] ${log.toString()} TS files analyzed by ${tsFilesList.length.toString()}\n`
+			`# [INFO] ${log.toString()} file.s analyzed of ${filesList.length.toString()}\n`
 		);
 		log += 1;
 	}

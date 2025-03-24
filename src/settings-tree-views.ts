@@ -17,14 +17,14 @@ export class UtdTreeSettingsDataProvider
 		if (configFilePath && fs.existsSync(configFilePath)) {
 			settingItem = new SettingItem("show config");
 		} else {
-			settingItem = new SettingItem("create config");
+			settingItem = new SettingItem("create config file sample");
 		}
 		this.items.push(settingItem);
 
 		if (excludeFilePath && fs.existsSync(excludeFilePath)) {
 			settingItem = new SettingItem("show exclude");
 		} else {
-			settingItem = new SettingItem("create exclude");
+			settingItem = new SettingItem("create exclude file sample");
 		}
 		this.items.push(settingItem);
 	}
@@ -49,38 +49,40 @@ class SettingItem extends vscode.TreeItem {
 		// Set the command and icon based on the label
 		if (label === "show config") {
 			this.command = {
-				command: "utd.showConfigFile",
+				command: "utd.openFile",
 				title: "show config",
+				arguments: [getConfigFilePath()],
 			};
 			this.iconPath = new vscode.ThemeIcon(
-				"output",
+				"go-to-file",
 				new vscode.ThemeColor("charts.blue")
 			);
-		} else if (label === "create config") {
+		} else if (label === "create config file sample") {
 			this.command = {
 				command: "utd.createConfigFile",
 				title: "create config",
 			};
 			this.iconPath = new vscode.ThemeIcon(
-				"play",
+				"new-file",
 				new vscode.ThemeColor("charts.green")
 			);
-		} else if (label === "create exclude") {
+		} else if (label === "create exclude file sample") {
 			this.command = {
 				command: "utd.createExcludeFile",
 				title: "create exclude file",
 			};
 			this.iconPath = new vscode.ThemeIcon(
-				"play",
+				"new-file",
 				new vscode.ThemeColor("charts.green")
 			);
 		} else if (label === "show exclude") {
 			this.command = {
-				command: "utd.showExcludeFile",
+				command: "utd.openFile",
 				title: "show exclude file",
+				arguments: [getExcludeFilePath()],
 			};
 			this.iconPath = new vscode.ThemeIcon(
-				"output",
+				"go-to-file",
 				new vscode.ThemeColor("charts.blue")
 			);
 		}

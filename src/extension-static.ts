@@ -6,8 +6,8 @@ interface OutputInfo {
 	projectName: string;
 	jsonKeysListLength: number;
 	excludedKeyListLength: number;
-	htmlFilesListLength: number;
-	tsFilesListLength: number;
+	filesListLength: number;
+	filesExtensions: string[];
 	excludedKeyListOutput: string;
 	jsonKeysOutput: string;
 	unusedJsonKey: number;
@@ -19,19 +19,20 @@ interface OutputInfo {
  */
 function getConfigFileExample(): string {
 	return `{
-    "projectConfig": [
-        {
-            "labelName": "example",
-            "rootPath": "C:/path/to/project/folder",
-            "jsonPath": "C:/path/to/your/file.json",
-            "excludeFilePath": "C:/path/to/your/utd.exclude.txt"
-        }
-    ],
-    "utdConfig": [
-        {
-            "outputFolder": ""
-        }
-    ]
+	"utdConfig": [
+		{
+			"labelName": "example",
+			"rootPaths": ["C:/path/to/project/folder1", "C:/path/to/project/folder2"],
+			"jsonPath": "C:/path/to/your/file.json",
+			"excludePath": "C:/path/to/your/utd.exclude.txt",
+			"fileToAnalyze": [".ts", ".html"]
+		}
+	],
+	"globalConfig": [
+		{
+			"outputFolder": ""
+		}
+	]
 }`;
 }
 
@@ -54,10 +55,12 @@ function getOutputFile(outputInfo: OutputInfo): string {
 	return `***** INFO *****
 	
 Project : ${outputInfo.projectName}
-Unused json keys : ${outputInfo.unusedJsonKey} of ${outputInfo.jsonKeysListLength}
+Unused json keys : ${outputInfo.unusedJsonKey} of ${
+		outputInfo.jsonKeysListLength
+	}
 Ignored keys : ${outputInfo.excludedKeyListLength}
-HTML files analyzed : ${outputInfo.htmlFilesListLength}
-TypeScript files analyzed : ${outputInfo.tsFilesListLength}
+files analyzed : ${outputInfo.filesListLength}
+extensions : ${JSON.stringify(outputInfo.filesExtensions)}
 
 ***** EXCLUDED KEYS *****
 

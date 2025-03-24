@@ -56,24 +56,16 @@
 				"title": "refresh setting views"
 			},
 			{
-				"command": "utd.showConfigFile",
-				"title": "show config file"
-			},
-			{
 				"command": "utd.createConfigFile",
 				"title": "create config file"
 			},
 			{
-				"command": "utd.showExcludeFile",
-				"title": "show exclude file"
-			},
-			{
-				"command": "utd.showOutputFile",
-				"title": "show output file"
-			},
-			{
 				"command": "utd.createExcludeFile",
 				"title": "create exclude file"
+			},
+			{
+				"command": "utd.openFile",
+				"title": "open the given file"
 			}
 		]
 	},
