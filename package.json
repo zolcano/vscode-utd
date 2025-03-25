@@ -19,6 +19,13 @@
 					"command": "utd.refreshEntry",
 					"group": "navigation"
 				}
+			],
+			"editor/context": [
+				{
+					"command": "utd.openHighlightedPath",
+					"when": "editorTextFocus",
+					"group": "navigation"
+				}
 			]
 		},
 		"viewsContainers": {
@@ -66,6 +73,10 @@
 			{
 				"command": "utd.openFile",
 				"title": "open the given file"
+			},
+			{
+				"command": "utd.openHighlightedPath",
+				"title": "Open Highlighted Path"
 			}
 		]
 	},

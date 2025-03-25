@@ -39,18 +39,54 @@ export async function researchDir(
 export async function fileResearch(
 	filesList: string[],
 	jsonKeysList: [string, number][],
+	composedKey: [string, [string, number]][],
 	outputChannel: vscode.OutputChannel
 ) {
-	let log = 1;
-	for (const file of filesList) {
-		const fileLine = await fs.promises.readFile(file, "utf-8");
+	let log: number = 1;
+	for (let file of filesList) {
+		const fileContent = await fs.promises.readFile(file, "utf-8");
 		for (const jsonKey of jsonKeysList) {
-			if (fileLine.includes(jsonKey[0])) {
+			if (fileContent.includes(jsonKey[0])) {
 				jsonKey[1] += 1;
+			}
+
+			const fileLines = fileContent
+				.split("\n")
+				.map((str) => str.replace(/^[\t\s]+|[\r\n]+/g, ""));
+			for (
+				let lineNumber: number = 0;
+				lineNumber < fileLines.length;
+				lineNumber++
+			) {
+				if (
+					((fileLines[lineNumber].includes("+") ||
+						fileLines[lineNumber].includes("$")) &&
+						fileLines[lineNumber].includes("translate")) ||
+					fileLines[lineNumber].includes("jsonLocalizer[")
+				) {
+					let fileExist: boolean = false;
+					for (let i: number = 0; i < composedKey.length; i++) {
+						if (composedKey[i][0] === file) {
+							fileExist = true;
+							let lineExist: boolean = false;
+							for (let x = 1; x < composedKey[i].length; x++) {
+								if (composedKey[i][x][1] === lineNumber + 1) {
+									lineExist = true;
+								}
+							}
+							if (!lineExist) {
+								composedKey[i].push([fileLines[lineNumber], lineNumber + 1]);
+							}
+						}
+					}
+					if (!fileExist) {
+						composedKey.push([file, [fileLines[lineNumber], lineNumber + 1]]);
+					}
+				}
 			}
 		}
 		outputChannel.append(
-			`# [INFO] ${log.toString()} file.s analyzed of ${filesList.length.toString()}\n`
+			`# [INFO] ${log} file.s analyzed of ${filesList.length.toString()}\n`
 		);
 		log += 1;
 	}

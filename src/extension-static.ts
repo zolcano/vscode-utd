@@ -11,6 +11,8 @@ interface OutputInfo {
 	excludedKeyListOutput: string;
 	jsonKeysOutput: string;
 	unusedJsonKey: number;
+	composedKeyOutput: string;
+	composedKeyNumber: number;
 }
 
 /**
@@ -58,6 +60,7 @@ Project : ${outputInfo.projectName}
 Unused json keys : ${outputInfo.unusedJsonKey} of ${
 		outputInfo.jsonKeysListLength
 	}
+detected composed keys : ${outputInfo.composedKeyNumber} 
 Ignored keys : ${outputInfo.excludedKeyListLength}
 files analyzed : ${outputInfo.filesListLength}
 extensions : ${JSON.stringify(outputInfo.filesExtensions)}
@@ -65,6 +68,9 @@ extensions : ${JSON.stringify(outputInfo.filesExtensions)}
 ***** EXCLUDED KEYS *****
 
 ${outputInfo.excludedKeyListOutput}
+***** COMPOSED KEYS *****		//its just a feedback. keys aren't removed from the unused key section.
+
+${outputInfo.composedKeyOutput}
 ***** UNUSED KEYS *****
 
 ${outputInfo.jsonKeysOutput}

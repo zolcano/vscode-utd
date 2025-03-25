@@ -65,7 +65,7 @@ function activate(context: vscode.ExtensionContext) {
 	let openFile = vscode.commands.registerCommand(
 		"utd.openFile",
 		(filePath: string) => {
-			if (fs.existsSync(filePath)) {
+			if (fs.existsSync(filePath) && !fs.statSync(filePath).isDirectory()) {
 				vscode.workspace.openTextDocument(filePath).then((document) => {
 					vscode.window.showTextDocument(document);
 				});
@@ -126,6 +126,20 @@ function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	let openHighlightedPath = vscode.commands.registerCommand(
+		"utd.openHighlightedPath",
+		() => {
+			const editor = vscode.window.activeTextEditor;
+			if (editor) {
+				const selection = editor.selection;
+				const data = editor.document.getText(selection);
+				const filePath = data.replace(/[\r\n]+/g, "");
+
+				vscode.commands.executeCommand("utd.openFile", filePath);
+			}
+		}
+	);
+
 	/**
 	 * Register the command "utd.analyze" to analyze a project
 	 * and assign the function to it.
@@ -140,15 +154,6 @@ function activate(context: vscode.ExtensionContext) {
 			excludeFilePath: string | undefined,
 			outputFolder: string | undefined
 		) {
-			const outputChannel = vscode.window.createOutputChannel("utd");
-			outputChannel.show(true);
-			outputChannel.appendLine(projectName);
-			outputChannel.appendLine(JSON.stringify(rootPaths));
-			outputChannel.appendLine(jsonPath);
-			outputChannel.appendLine(JSON.stringify(extensions));
-			outputChannel.appendLine(String(excludeFilePath));
-			outputChannel.appendLine(String(outputFolder));
-
 			if (!fs.existsSync(jsonPath)) {
 				showErrorFileNotExist(jsonPath);
 			} else {
@@ -159,6 +164,9 @@ function activate(context: vscode.ExtensionContext) {
 				const filesList: string[] = [];
 				const jsonKeysList: [string, number][] = [];
 				let excludedKeyList: string[] = [];
+
+				type lineinfo = [string, number];
+				let composedKey: [string, [string, number]][] = [];
 
 				for (let rootPath of rootPaths) {
 					await researchDir(rootPath, filesList, extensions);
@@ -182,7 +190,7 @@ function activate(context: vscode.ExtensionContext) {
 					}
 				}
 
-				await fileResearch(filesList, jsonKeysList, outputChannel);
+				await fileResearch(filesList, jsonKeysList, composedKey, outputChannel);
 
 				// Initialize output information object
 				let outputInfo: OutputInfo = {
@@ -194,6 +202,8 @@ function activate(context: vscode.ExtensionContext) {
 					excludedKeyListOutput: "",
 					jsonKeysOutput: "",
 					unusedJsonKey: 0,
+					composedKeyOutput: "",
+					composedKeyNumber: 0,
 				};
 
 				for (let excludedKey of excludedKeyList) {
@@ -208,6 +218,19 @@ function activate(context: vscode.ExtensionContext) {
 						// Increment the count of unused JSON keys
 						outputInfo.unusedJsonKey += 1;
 					}
+				}
+
+				//Append the composedKeyOuput key to the ouput string.
+				//Array format : [path, [linetext, linenumber],[linetext, linenumber],[...]],[path,...]
+				for (let file of composedKey) {
+					outputInfo.composedKeyOutput += `${file[0]}\n`;
+					for (let line of file) {
+						if (Array.isArray(line)) {
+							outputInfo.composedKeyOutput += `  -line ${line[1]} : ${line[0]}\n`;
+							outputInfo.composedKeyNumber += 1;
+						}
+					}
+					outputInfo.composedKeyOutput += "\n";
 				}
 
 				let outputFilePath: string = "";
@@ -238,7 +261,8 @@ function activate(context: vscode.ExtensionContext) {
 		createConfigFile,
 		openFile,
 		createExcludeFile,
-		analyze
+		analyze,
+		openHighlightedPath
 	);
 }
 
