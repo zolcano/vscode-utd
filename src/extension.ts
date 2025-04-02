@@ -147,6 +147,7 @@ function activate(context: vscode.ExtensionContext) {
 	let analyze = vscode.commands.registerCommand(
 		"utd.analyze",
 		async function (
+			quick: boolean,
 			projectName: string,
 			rootPaths: string[],
 			jsonPath: string,
@@ -172,13 +173,21 @@ function activate(context: vscode.ExtensionContext) {
 					await researchDir(rootPath, filesList, extensions);
 				}
 				await findJsonKeys(jsonPath, jsonKeysList);
-
 				if (excludeFilePath) {
 					const data = fs.readFileSync(excludeFilePath, "utf-8");
 					excludedKeyList = data
 						.split("\n")
 						.map((str) => str.replace(/[\r\n]+/g, ""));
-
+					for (let excludedKey of excludedKeyList) {
+						if (excludedKey.endsWith("**")) {
+							excludedKey = excludedKey.replace(/\*\*/g, "");
+							for (let jsonKey of jsonKeysList) {
+								if (jsonKey[0].startsWith(excludedKey)) {
+									excludedKeyList.push(jsonKey[0]);
+								}
+							}
+						}
+					}
 					// Remove excluded keys from JSON keys list
 					for (let excludedKey of excludedKeyList) {
 						for (let i = 0; i < jsonKeysList.length; i++) {
@@ -190,7 +199,13 @@ function activate(context: vscode.ExtensionContext) {
 					}
 				}
 
-				await fileResearch(filesList, jsonKeysList, composedKey, outputChannel);
+				await fileResearch(
+					filesList,
+					jsonKeysList,
+					composedKey,
+					outputChannel,
+					quick
+				);
 
 				// Initialize output information object
 				let outputInfo: OutputInfo = {
@@ -236,12 +251,29 @@ function activate(context: vscode.ExtensionContext) {
 				let outputFilePath: string = "";
 				const rootPath: string | undefined = getRootPath();
 				if (outputFolder && rootPath) {
-					outputFilePath = path.join(
-						outputFolder,
-						`utd-output-${projectName}.txt`
-					);
+					if (quick) {
+						outputFilePath = path.join(
+							outputFolder,
+							`utd-output-quick-${projectName}.txt`
+						);
+					} else {
+						outputFilePath = path.join(
+							outputFolder,
+							`utd-output-${projectName}.txt`
+						);
+					}
 				} else if (rootPath) {
-					outputFilePath = path.join(rootPath, `utd-output-${projectName}.txt`);
+					if (quick) {
+						outputFilePath = path.join(
+							rootPath,
+							`utd-output-quick-${projectName}.txt`
+						);
+					} else {
+						outputFilePath = path.join(
+							rootPath,
+							`utd-output-${projectName}.txt`
+						);
+					}
 				}
 
 				// Write the output information to the output file

@@ -40,7 +40,8 @@ export async function fileResearch(
 	filesList: string[],
 	jsonKeysList: [string, number][],
 	composedKey: [string, [string, number]][],
-	outputChannel: vscode.OutputChannel
+	outputChannel: vscode.OutputChannel,
+	quick: boolean
 ) {
 	let log: number = 1;
 	for (let file of filesList) {
@@ -49,38 +50,46 @@ export async function fileResearch(
 			if (fileContent.includes(jsonKey[0])) {
 				jsonKey[1] += 1;
 			}
+			if (!quick) {
+				const fileLines: string[] = fileContent
+					.split("\n")
+					.map((str) => str.replace(/^[\t\s]+|[\r\n]+/g, ""));
 
-			const fileLines = fileContent
-				.split("\n")
-				.map((str) => str.replace(/^[\t\s]+|[\r\n]+/g, ""));
-			for (
-				let lineNumber: number = 0;
-				lineNumber < fileLines.length;
-				lineNumber++
-			) {
-				if (
-					((fileLines[lineNumber].includes("+") ||
-						fileLines[lineNumber].includes("$")) &&
-						fileLines[lineNumber].includes("translate")) ||
-					fileLines[lineNumber].includes("jsonLocalizer[")
+				for (
+					let lineNumber: number = 0;
+					lineNumber < fileLines.length;
+					lineNumber++
 				) {
-					let fileExist: boolean = false;
-					for (let i: number = 0; i < composedKey.length; i++) {
-						if (composedKey[i][0] === file) {
-							fileExist = true;
-							let lineExist: boolean = false;
-							for (let x = 1; x < composedKey[i].length; x++) {
-								if (composedKey[i][x][1] === lineNumber + 1) {
-									lineExist = true;
+					let line = fileLines[lineNumber];
+					if (line.endsWith(",")) {
+						line = line.slice(0, -1);
+					}
+					if (
+						((line.includes("+") || line.includes("$")) &&
+							line.includes("translate")) ||
+						((line.includes("jsonLocalizer[") ||
+							(line.includes("jsonLocalizer") &&
+								line.includes("GetStringForCulture"))) &&
+							(line.includes(",") || line.includes("+") || !line.includes('"')))
+					) {
+						let fileExist: boolean = false;
+						for (let i: number = 0; i < composedKey.length; i++) {
+							if (composedKey[i][0] === file) {
+								fileExist = true;
+								let lineExist: boolean = false;
+								for (let x = 1; x < composedKey[i].length; x++) {
+									if (composedKey[i][x][1] === lineNumber + 1) {
+										lineExist = true;
+									}
+								}
+								if (!lineExist) {
+									composedKey[i].push([line, lineNumber + 1]);
 								}
 							}
-							if (!lineExist) {
-								composedKey[i].push([fileLines[lineNumber], lineNumber + 1]);
-							}
 						}
-					}
-					if (!fileExist) {
-						composedKey.push([file, [fileLines[lineNumber], lineNumber + 1]]);
+						if (!fileExist) {
+							composedKey.push([file, [line, lineNumber + 1]]);
+						}
 					}
 				}
 			}

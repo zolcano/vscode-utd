@@ -19,7 +19,7 @@ export class UtdTreeOutputDataProvider
 				fs.readFileSync(configFilePath, "utf-8")
 			);
 			//if no configuration found, the output folder is the root folder of opened in VsCode
-			let outputFolder: string = jsonData.utdConfig[0].outputFolder;
+			let outputFolder: string = jsonData.globalConfig[0].outputFolder;
 			const rootPath: string | undefined = getRootPath();
 			if (!outputFolder && rootPath) {
 				outputFolder = rootPath;

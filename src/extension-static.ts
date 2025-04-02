@@ -58,7 +58,7 @@ function getOutputFile(outputInfo: OutputInfo): string {
 	
 Project : ${outputInfo.projectName}
 Unused json keys : ${outputInfo.unusedJsonKey} of ${
-		outputInfo.jsonKeysListLength
+		outputInfo.jsonKeysListLength - outputInfo.excludedKeyListLength
 	}
 detected composed keys : ${outputInfo.composedKeyNumber} 
 Ignored keys : ${outputInfo.excludedKeyListLength}
@@ -68,7 +68,7 @@ extensions : ${JSON.stringify(outputInfo.filesExtensions)}
 ***** EXCLUDED KEYS *****
 
 ${outputInfo.excludedKeyListOutput}
-***** COMPOSED KEYS *****		//its just a feedback. keys aren't removed from the unused key section.
+***** COMPOSED KEYS *****		//its just a feedback. keys aren't removed from the "unused keys" section.
 
 ${outputInfo.composedKeyOutput}
 ***** UNUSED KEYS *****

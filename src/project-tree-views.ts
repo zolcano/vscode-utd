@@ -5,6 +5,7 @@ import { getConfigFilePath, showErrorFileNotExist } from "./extension-static";
 
 // Constants for repeated labels
 const LABEL_START_ANALYZE = "start analyze";
+const LABEL_QUICK_ANALYZE = "quick analyze";
 const LABEL_FOLDER = "folder";
 const LABEL_PROJECT_DOCUMENTS = "project documents";
 const LABEL_EXTENSIONS = "extensions";
@@ -38,7 +39,21 @@ export class UtdTreeProjectDataProvider
 					item.rootPaths,
 					item.jsonPath,
 					item.fileToAnalyze,
-					item.excludePath ? item.excludepath : undefined,
+					item.excludePath ? item.excludePath : undefined,
+					jsonData.globalConfig[0].outputFolder
+						? jsonData.globalConfig[0].outputFolder
+						: undefined
+				)
+			);
+
+			rootProjectItem.children.push(
+				new ProjectItem(
+					LABEL_QUICK_ANALYZE,
+					item.labelName,
+					item.rootPaths,
+					item.jsonPath,
+					item.fileToAnalyze,
+					item.excludePath ? item.excludePath : undefined,
 					jsonData.globalConfig[0].outputFolder
 						? jsonData.globalConfig[0].outputFolder
 						: undefined
@@ -105,7 +120,17 @@ class ProjectItem extends vscode.TreeItem {
 			this.command = {
 				command: "utd.analyze",
 				title: "Start analyse of this project",
-				arguments: [...args],
+				arguments: [false, ...args],
+			};
+			this.iconPath = new vscode.ThemeIcon(
+				"play",
+				new vscode.ThemeColor("charts.green")
+			);
+		} else if (label === LABEL_QUICK_ANALYZE) {
+			this.command = {
+				command: "utd.analyze",
+				title: "Start analyse of this project",
+				arguments: [true, ...args],
 			};
 			this.iconPath = new vscode.ThemeIcon(
 				"play",
